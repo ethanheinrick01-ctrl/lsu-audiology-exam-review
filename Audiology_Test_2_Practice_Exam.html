@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audiology Test 2 — Practice Exam (Ch 5 & 6)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    padding: 40px 20px;
+    border-bottom: 2px solid #30363d;
+    margin-bottom: 30px;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #58a6ff, #bc8cff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .header p {
+    color: #8b949e;
+    font-size: 0.95rem;
+  }
+
+  .score-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .score-bar .left { font-weight: 600; font-size: 1.1rem; }
+  .score-bar .right { display: flex; gap: 20px; align-items: center; }
+  .score-bar .correct { color: #3fb950; font-weight: 700; }
+  .score-bar .wrong { color: #f85149; font-weight: 700; }
+  .score-bar .unanswered { color: #8b949e; }
+
+  .section-header {
+    background: linear-gradient(135deg, #1a1f2e, #1a2332);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 30px 0 16px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #58a6ff;
+  }
+
+  .question-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.3s;
+  }
+
+  .question-card.answered-correct { border-color: #238636; }
+  .question-card.answered-wrong { border-color: #da3633; }
+
+  .q-number {
+    display: inline-block;
+    background: #30363d;
+    color: #8b949e;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+
+  .q-text {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .q-type-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge-mc { background: #1f3a5f; color: #58a6ff; }
+  .badge-tf { background: #2a1f3f; color: #bc8cff; }
+  .badge-calc { background: #1f3f2a; color: #3fb950; }
+
+  .options { display: flex; flex-direction: column; gap: 8px; }
+
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #e6edf3;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+  }
+
+  .option-btn:hover:not(.locked) {
+    border-color: #58a6ff;
+    background: #1a1f2e;
+  }
+
+  .option-btn .letter {
+    min-width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: #21262d;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #8b949e;
+  }
+
+  .option-btn.selected { border-color: #58a6ff; background: #1a1f2e; }
+  .option-btn.selected .letter { background: #58a6ff; color: #0d1117; }
+
+  .option-btn.correct-answer { border-color: #238636; background: #0d2818; }
+  .option-btn.correct-answer .letter { background: #238636; color: #fff; }
+
+  .option-btn.wrong-answer { border-color: #da3633; background: #2d1214; }
+  .option-btn.wrong-answer .letter { background: #da3633; color: #fff; }
+
+  .explanation {
+    margin-top: 12px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .explanation.show { display: block; }
+  .explanation.correct-exp { background: #0d2818; border: 1px solid #238636; color: #3fb950; }
+  .explanation.wrong-exp { background: #2d1214; border: 1px solid #da3633; color: #f85149; }
+
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    margin-top: 30px;
+    background: linear-gradient(135deg, #238636, #2ea043);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .submit-btn:hover { opacity: 0.9; }
+
+  .results-panel {
+    display: none;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 30px;
+    margin-top: 30px;
+    text-align: center;
+  }
+
+  .results-panel h2 { font-size: 1.8rem; margin-bottom: 16px; }
+  .results-panel .big-score { font-size: 4rem; font-weight: 800; }
+  .results-panel .breakdown { margin-top: 20px; color: #8b949e; font-size: 0.95rem; line-height: 1.8; }
+
+  .reset-btn {
+    margin-top: 20px;
+    padding: 12px 32px;
+    background: #30363d;
+    color: #e6edf3;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .reset-btn:hover { background: #484f58; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>AUDIOLOGY TEST 2 — PRACTICE EXAM</h1>
+    <p>70 Questions — Chapters 5 & 6 — MC & True/False — Prof. Sutherland Format</p>
+  </div>
+
+  <div class="score-bar" id="scoreBar">
+    <div class="left">Progress: <span id="answeredCount">0</span>/70</div>
+    <div class="right">
+      <span class="correct" id="correctCount">0 ✓</span>
+      <span class="wrong" id="wrongCount">0 ✗</span>
+      <span class="unanswered" id="unansweredCount">70 left</span>
+    </div>
+  </div>
+
+  <div id="questionsContainer"></div>
+
+  <button class="submit-btn" id="submitBtn" onclick="submitExam()">Submit Exam</button>
+
+  <div class="results-panel" id="resultsPanel">
+    <h2>EXAM RESULTS</h2>
+    <div class="big-score" id="finalScore"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <button class="reset-btn" onclick="resetExam()">Retake Exam</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  // ========== SECTION: SPEECH AUDIOMETRY BASICS (Q1-10) ==========
+  {
+    section: "SPEECH AUDIOMETRY — FUNDAMENTALS",
+    q: "Speech audiometry evaluates how well a patient can hear and understand specific types of speech stimuli.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 0,
+    explain: "This is the textbook definition from Ch 5, Slide 2. Pure tones alone don't represent real-world listening — speech audiometry fills that gap."
+  },
+  {
+    q: "Which of the following is NOT a purpose of speech audiometry?",
+    type: "mc",
+    options: [
+      "Cross-check pure tone thresholds",
+      "Determine candidacy for hearing aids or cochlear implants",
+      "Diagnose middle ear pathology",
+      "Contribute to diagnosis of cochlear vs. 8th nerve lesions"
+    ],
+    answer: 2,
+    explain: "Speech audiometry helps differentiate cochlear from retrocochlear (8th nerve) — NOT middle ear pathology. Immittance testing (Ch 6) handles middle ear."
+  },
+  {
+    q: "What are the two types of speech threshold tests?",
+    type: "mc",
+    options: [
+      "SRT and WRS",
+      "SRT and SDT/SAT",
+      "SDT and WRS",
+      "MCL and UCL"
+    ],
+    answer: 1,
+    explain: "Speech thresholds = SRT (Speech Recognition Threshold) and SDT/SAT (Speech Detection/Awareness Threshold). WRS is a suprathreshold test, not a threshold test."
+  },
+  {
+    q: "Monitored live voice testing is standardized and produces consistent results across clinicians.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "Live voice is NOT standardized — each clinician's voice differs. Recorded materials are consistent and standardizable. Live voice requires VU meter calibration but still isn't standardized."
+  },
+  {
+    q: "When using monitored live voice, the clinician must calibrate using a:",
+    type: "mc",
+    options: [
+      "Sound level meter",
+      "VU meter",
+      "Tympanometer",
+      "Bone oscillator"
+    ],
+    answer: 1,
+    explain: "The VU (Volume Unit) meter ensures the clinician's voice is at the correct presentation level. The carrier phrase should peak at 0 on the VU meter."
+  },
+  {
+    q: "What equipment is needed for speech audiometry?",
+    type: "mc",
+    options: [
+      "Immittance meter and probe",
+      "Diagnostic audiometer and transducers",
+      "Otoscope and tuning fork",
+      "Surface electrodes and computer"
+    ],
+    answer: 1,
+    explain: "Speech audiometry uses a diagnostic audiometer (to control presentation levels) and transducers (headphones/speakers). Immittance meter = tympanometry, electrodes = ABR."
+  },
+  {
+    q: "Speech audiometry can help determine if a patient is a candidate for hearing aids or cochlear implants.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 0,
+    explain: "Directly from Slide 3 — WRS results especially help determine amplification candidacy. Poor WRS = cochlear implant consideration."
+  },
+  {
+    q: "Knowing the lowest level at which a patient hears pure tones is fully representative of their real-world listening ability.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "Slide 2 — pure tones are NOT representative of real-world environments. That's exactly WHY we do speech audiometry."
+  },
+  {
+    q: "Speech audiometry can monitor changes in speech recognition ability over time.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 0,
+    explain: "Slide 3 — this is one of the listed purposes. Tracking WRS over time can reveal progressive cochlear or retrocochlear deterioration."
+  },
+  {
+    q: "Which method of speech material delivery is preferred for standardization?",
+    type: "mc",
+    options: [
+      "Monitored live voice",
+      "Recorded speech materials",
+      "Unmonitored live voice",
+      "Patient-selected volume"
+    ],
+    answer: 1,
+    explain: "Recorded materials are stored in the audiometer, consistent every time, and standardizable. Live voice varies by clinician."
+  },
+
+  // ========== SECTION: SRT (Q11-20) ==========
+  {
+    section: "SPEECH RECOGNITION THRESHOLD (SRT)",
+    q: "The SRT is defined as the lowest hearing level at which speech can be recognized ___ of the time.",
+    type: "mc",
+    options: ["25%", "50%", "75%", "100%"],
+    answer: 1,
+    explain: "SRT = 50% recognition, just like pure tone threshold = 50% of ascending presentations. Both are defined at the 50% point."
+  },
+  {
+    q: "SRT uses spondaic words. A spondee is a:",
+    type: "mc",
+    options: [
+      "Single-syllable word that is phonemically balanced",
+      "Two-syllable compound word with equal stress on each syllable",
+      "Three-syllable word with emphasis on the first syllable",
+      "Nonsense syllable pair"
+    ],
+    answer: 1,
+    explain: "Spondees = two syllable, equal stress. Examples: baseball, playground, eardrum, toothbrush. Monosyllabic words are used for WRS, not SRT."
+  },
+  {
+    q: "SRT should correlate with PTA within:",
+    type: "mc",
+    options: ["5 dB HL", "10 dB HL", "15 dB HL", "20 dB HL"],
+    answer: 1,
+    explain: "SRT and PTA should agree within 10 dB. If they don't, something is wrong — exaggeration, precipitous slope, central issues, or calibration error."
+  },
+  {
+    q: "A patient's PTA is 35 dB HL and their SRT is 60 dB HL. The SRT and PTA are in good agreement.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "25 dB difference — way outside the 10 dB agreement window. Possible reasons: patient exaggerating HL, precipitously sloping audiogram, central auditory issue, or VU meter calibration problem."
+  },
+  {
+    q: "Which of the following is NOT a reason SRT and PTA may disagree?",
+    type: "mc",
+    options: [
+      "Patient is exaggerating pure tone hearing loss",
+      "Precipitously sloping pure tone audiogram",
+      "Patient has bilateral hearing loss",
+      "Improper calibration (VU meter)"
+    ],
+    answer: 2,
+    explain: "Bilateral HL alone doesn't cause SRT-PTA disagreement. The four reasons are: exaggeration, precipitous slope, central auditory nervous system issues, and improper VU meter calibration."
+  },
+  {
+    q: "SRT testing begins with familiarization of the word list at a comfortable listening level.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 0,
+    explain: "Slide 9 — SRT starts with familiarization so the patient knows the words. Any words not correctly identified during familiarization are eliminated from the test list."
+  },
+  {
+    q: "An SRT report should include which of the following?",
+    type: "mc",
+    options: [
+      "SRT value only",
+      "SRT value, masking (if used), and method used",
+      "SRT value and WRS score",
+      "SRT value and tympanogram type"
+    ],
+    answer: 1,
+    explain: "Slide 11 — Report: state SRT, masking if used, method. Also report whether SRT and PTA agree, and if not, why."
+  },
+  {
+    q: "SRT provides a reference level for suprathreshold testing (WRS).",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 0,
+    explain: "One of the key purposes of SRT — you need it to calculate the sensation level at which WRS is presented."
+  },
+  {
+    q: "If SRT cannot be obtained, the clinician should use:",
+    type: "mc",
+    options: [
+      "PTA as a substitute",
+      "SDT/SAT",
+      "WRS at maximum output",
+      "Tympanometry"
+    ],
+    answer: 1,
+    explain: "SDT/SAT is the fallback when SRT can't be obtained — used for young children, severe-profound HL, speech/language impairments, cognitive deficits."
+  },
+  {
+    q: "SDT is typically ___ dB lower than SRT.",
+    type: "mc",
+    options: ["5 dB", "10 dB", "15 dB", "20 dB"],
+    answer: 1,
+    explain: "SDT is 10 dB lower because detection (just hearing something) requires less intensity than recognition (understanding the word)."
+  },
+
+  // ========== SECTION: WRS (Q21-30) ==========
+  {
+    section: "WORD RECOGNITION SCORE (WRS)",
+    q: "WRS uses monosyllabic, phonemically balanced words.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 0,
+    explain: "Slide 15 — WRS materials are single-syllable words (monosyllabic) that are phonemically balanced: NU-6 Words and CID W-22 are the standard lists."
+  },
+  {
+    q: "WRS is an open-set test, meaning the patient is familiarized with the word list before testing.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "TRICK — WRS is open-set, which means the patient is NOT familiarized with the words beforehand. SRT familiarizes; WRS does not. Open set = no preview."
+  },
+  {
+    q: "WRS uses ___ words per ear and is scored using ___ scoring.",
+    type: "mc",
+    options: [
+      "50 words; phoneme",
+      "25 words; whole word",
+      "25 words; phoneme",
+      "50 words; whole word"
+    ],
+    answer: 1,
+    explain: "25 words per ear, whole word scoring. Each word = 4% (25 × 4% = 100%). If you get 20/25 right = 80%."
+  },
+  {
+    q: "WRS is presented at a sensation level of:",
+    type: "mc",
+    options: [
+      "25-40 dB HL",
+      "25-40 dB SL",
+      "40-55 dB HL",
+      "70-100 dB SL"
+    ],
+    answer: 1,
+    explain: "WRS is presented at 25-40 dB SL (sensation level — above the patient's threshold), NOT dB HL. This is a professor-confirmed test question."
+  },
+  {
+    q: "A patient has an SRT of 40 dB HL. WRS is presented at 75 dB HL. What is the sensation level?",
+    type: "calc",
+    options: ["25 dB SL", "35 dB SL", "40 dB SL", "75 dB SL"],
+    answer: 1,
+    explain: "Sensation Level = Presentation Level − Threshold. 75 dB HL − 40 dB HL = 35 dB SL. This is exactly the type of calculation your professor confirmed will be on the test."
+  },
+  {
+    q: "The carrier phrase should peak at 0 on the VU meter, and the test words should also peak at 0.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "Slide 14 — The carrier phrase peaks at 0 on VU, but test words do NOT need to peak at 0. Words vary in acoustic power and are allowed to peak where they will."
+  },
+  {
+    q: "A WRS of 82% indicates:",
+    type: "mc",
+    options: [
+      "Within normal limits",
+      "Slight difficulty, similar to listening over a telephone",
+      "Moderate difficulty",
+      "Poor recognition"
+    ],
+    answer: 1,
+    explain: "75-90% = slight difficulty, like listening over a telephone. Professor said 'YOU NEED TO KNOW THESE.' 90-100%=WNL, 60-75%=moderate, 50-60%=poor, <50%=very poor."
+  },
+  {
+    q: "A WRS of 55% means the patient would experience:",
+    type: "mc",
+    options: [
+      "Slight difficulty",
+      "Moderate difficulty",
+      "Poor recognition; marked difficulty following conversation",
+      "Very poor; unable to follow running speech"
+    ],
+    answer: 2,
+    explain: "50-60% = poor recognition, marked difficulty following conversation. One category below moderate (60-75%) and one above very poor (<50%)."
+  },
+  {
+    q: "A WRS below 50% indicates the patient:",
+    type: "mc",
+    options: [
+      "Has slight difficulty understanding speech",
+      "Would experience moderate difficulty",
+      "May be unable to follow running speech",
+      "Has normal word recognition"
+    ],
+    answer: 2,
+    explain: "<50% = very poor, patient may be unable to follow running speech. This is the worst category on the WRS interpretation scale."
+  },
+  {
+    q: "A patient gets 22 out of 25 words correct on WRS. Their score is:",
+    type: "calc",
+    options: ["84%", "88%", "90%", "92%"],
+    answer: 1,
+    explain: "22/25 = 88%. Each word = 4%. This falls in the 75-90% range = slight difficulty, like listening over a telephone."
+  },
+
+  // ========== SECTION: MCL, UCL, DYNAMIC RANGE (Q31-35) ==========
+  {
+    section: "MCL, UCL, & DYNAMIC RANGE",
+    q: "Most comfortable loudness level (MCL) for people with normal hearing is generally:",
+    type: "mc",
+    options: ["20-30 dB HL", "40-55 dB HL", "70-85 dB HL", "90-100 dB HL"],
+    answer: 1,
+    explain: "Slide 18 — MCL = 40-55 dB HL for normal hearing. This is where people prefer to listen to speech."
+  },
+  {
+    q: "Uncomfortable loudness level (UCL) for speech is approximately:",
+    type: "mc",
+    options: ["70 dB HL", "85 dB HL", "100 dB HL", "120 dB HL"],
+    answer: 2,
+    explain: "Slide 19 — UCL ≈ 100 dB HL. Key fact: people with cochlear loss ALSO have UCL around 100 dB HL."
+  },
+  {
+    q: "A patient with cochlear hearing loss typically has a UCL that is much higher than someone with normal hearing.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "FALSE — cochlear loss patients have the SAME or slightly lower UCL (~100 dB). Their SRT is elevated but their UCL stays the same, which is why their dynamic range is REDUCED."
+  },
+  {
+    q: "Dynamic range is calculated as:",
+    type: "mc",
+    options: [
+      "MCL minus SRT",
+      "UCL minus SRT",
+      "UCL minus MCL",
+      "PTA minus SRT"
+    ],
+    answer: 1,
+    explain: "Dynamic Range = UCL − SRT. Normal hearing: ~100 dB range. Cochlear loss: reduced range because SRT is elevated but UCL stays ~100 dB."
+  },
+  {
+    q: "A patient has an SRT of 55 dB HL and a UCL of 100 dB HL. Their dynamic range is:",
+    type: "calc",
+    options: ["35 dB", "45 dB", "55 dB", "100 dB"],
+    answer: 1,
+    explain: "100 − 55 = 45 dB. Normal dynamic range is ~100 dB, so this patient has a significantly reduced range — consistent with cochlear hearing loss."
+  },
+
+  // ========== SECTION: IMMITTANCE BASICS (Q36-40) ==========
+  {
+    section: "IMMITTANCE MEASURES — FUNDAMENTALS",
+    q: "Immittance testing is a test of hearing.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "Slide 4 — Immittance is NOT a test of hearing. It describes mechanical properties of the middle ear. A patient can have normal immittance and still have significant hearing loss (e.g., sensorineural)."
+  },
+  {
+    q: "The term 'immittance' is a combination of:",
+    type: "mc",
+    options: [
+      "Impedance and compliance",
+      "Impedance and admittance",
+      "Admittance and compliance",
+      "Immersion and compliance"
+    ],
+    answer: 1,
+    explain: "Immittance = impedance + admittance. Impedance = resistance to energy flow (Ohms). Admittance = ease of energy flow (mmhos). They're reciprocals."
+  },
+  {
+    q: "Admittance refers to the ease with which energy flows through the vibrating system.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 0,
+    explain: "Admittance = ease of flow (measured in mmhos). Impedance = resistance to flow (measured in Ohms). They're opposites."
+  },
+  {
+    q: "The probe tone used in tympanometry is a ___ Hz pure tone delivered at ___ dB SPL.",
+    type: "mc",
+    options: [
+      "226 Hz at 85 dB SPL",
+      "1000 Hz at 85 dB SPL",
+      "226 Hz at 65 dB SPL",
+      "500 Hz at 90 dB SPL"
+    ],
+    answer: 0,
+    explain: "Slide 8 — Standard adult probe tone = 226 Hz at 85 dB SPL, delivered through a probe sealed in the ear canal (hermetic seal required)."
+  },
+  {
+    q: "Which of the following is NOT a clinical use of immittance testing?",
+    type: "mc",
+    options: [
+      "Detecting middle ear and Eustachian tube disorders",
+      "Differentiating cochlear from retrocochlear disorder",
+      "Measuring pure tone thresholds",
+      "Testing facial nerve integrity"
+    ],
+    answer: 2,
+    explain: "Immittance doesn't measure pure tone thresholds — that's pure tone audiometry. Immittance detects ME disorders, differentiates cochlear/retrocochlear, confirms PT results, tests CN VII, and is great for pediatric populations."
+  },
+
+  // ========== SECTION: TYMPANOMETRY (Q41-52) ==========
+  {
+    section: "TYMPANOMETRY — NORMS & INTERPRETATION",
+    q: "Normal ear canal volume (ECV) for adults is:",
+    type: "mc",
+    options: ["0.3 – 0.9 mL", "0.9 – 2.0 mL", "0.3 – 1.7 mL", "0.3 – 1.0 mL"],
+    answer: 1,
+    explain: "Adult ECV = 0.9–2.0 mL. Kids = 0.3–0.9 mL. Remember: adult range starts where kids max out (0.9)."
+  },
+  {
+    q: "Normal ear canal volume for children is:",
+    type: "mc",
+    options: ["0.1 – 0.5 mL", "0.3 – 0.9 mL", "0.9 – 2.0 mL", "0.5 – 1.5 mL"],
+    answer: 1,
+    explain: "Kids ECV = 0.3–0.9 mL. Smaller canals = smaller volume. Adults start at 0.9 where kids end."
+  },
+  {
+    q: "Normal static acoustic compliance for adults is:",
+    type: "mc",
+    options: ["0.3 – 1.0 mL", "0.3 – 1.7 mL", "0.9 – 2.0 mL", "0.1 – 0.5 mL"],
+    answer: 1,
+    explain: "Adult compliance = 0.3–1.7 mL. Kids = 0.3–1.0 mL. Same low end (0.3), adults just have more range on top."
+  },
+  {
+    q: "A tympanometric peak pressure of -180 daPa indicates:",
+    type: "mc",
+    options: [
+      "Normal middle ear pressure",
+      "Eustachian tube dysfunction",
+      "TM perforation",
+      "Otosclerosis"
+    ],
+    answer: 1,
+    explain: "Anything ≥ +150 or ≤ -150 daPa = abnormal = Eustachian tube dysfunction. -180 exceeds -150, so it's abnormal negative pressure."
+  },
+  {
+    q: "Tympanometric width norms: adults should be less than ___ daPa and children less than ___ daPa.",
+    type: "mc",
+    options: [
+      "Adults < 200, Children < 125",
+      "Adults < 125, Children < 200",
+      "Adults < 150, Children < 150",
+      "Adults < 100, Children < 150"
+    ],
+    answer: 1,
+    explain: "Adults < 125 daPa, Kids < 200 daPa. Wider peaks = more pathology. Kids get a wider norm because pediatric middle ears are different."
+  },
+  {
+    q: "A Type A tympanogram indicates:",
+    type: "mc",
+    options: [
+      "Normal middle ear function, all 4 variables normal",
+      "Reduced compliance",
+      "Excessive compliance",
+      "Negative middle ear pressure"
+    ],
+    answer: 0,
+    explain: "Type A = normal. All 4 variables (ECV, compliance, peak pressure, width) within normal limits."
+  },
+  {
+    q: "A Type As tympanogram shows peak compliance that is ___ normal.",
+    type: "mc",
+    options: ["Above", "Below", "Equal to", "Absent from"],
+    answer: 1,
+    explain: "As = 's' for stiff/shallow. Compliance BELOW normal. 3/4 variables normal. Think otosclerosis — stiff ossicular chain."
+  },
+  {
+    q: "A Type Ad tympanogram shows peak compliance that is ___ normal.",
+    type: "mc",
+    options: ["Above", "Below", "Equal to", "Absent from"],
+    answer: 0,
+    explain: "Ad = 'd' for deep/disarticulation. Compliance ABOVE normal (TM moves too easily). Think ossicular discontinuity or a very flaccid TM."
+  },
+  {
+    q: "A Type B tympanogram with LARGE ear canal volume most likely indicates:",
+    type: "mc",
+    options: [
+      "Middle ear pathology (fluid)",
+      "TM perforation or patent PE tube",
+      "Probe is blocked/occluded",
+      "Eustachian tube dysfunction"
+    ],
+    answer: 1,
+    explain: "Type B + large volume = hole in the TM (perforation or patent PE tube). The probe is 'seeing' the middle ear space too, so volume reads high. CRITICAL distinction your professor hammered."
+  },
+  {
+    q: "A Type B tympanogram with NORMAL ear canal volume most likely indicates:",
+    type: "mc",
+    options: [
+      "TM perforation",
+      "Occluded probe",
+      "Middle ear pathology (e.g., fluid)",
+      "Normal middle ear function"
+    ],
+    answer: 2,
+    explain: "Type B + normal volume = middle ear pathology (fluid, mass, etc). TM is intact (normal volume) but nothing is moving (flat tymp)."
+  },
+  {
+    q: "A Type B tympanogram with SMALL ear canal volume most likely indicates:",
+    type: "mc",
+    options: [
+      "TM perforation",
+      "Middle ear fluid",
+      "Occluded probe or cerumen blockage",
+      "Eustachian tube dysfunction"
+    ],
+    answer: 2,
+    explain: "Type B + small volume = something blocking the probe tip (cerumen, probe against canal wall). The sound can't even reach the TM."
+  },
+  {
+    q: "A Type C tympanogram indicates:",
+    type: "mc",
+    options: [
+      "Normal middle ear function",
+      "TM perforation",
+      "Negative middle ear pressure / Eustachian tube dysfunction",
+      "Ossicular discontinuity"
+    ],
+    answer: 2,
+    explain: "Type C = peak shifted to the negative side. Negative middle ear pressure from Eustachian tube dysfunction. Same concept as retracted TM from Test 1."
+  },
+
+  // ========== SECTION: ACOUSTIC REFLEXES (Q53-62) ==========
+  {
+    section: "ACOUSTIC REFLEXES",
+    q: "The acoustic reflex involves contraction of the ___ muscle.",
+    type: "mc",
+    options: ["Tensor tympani", "Stapedius", "Masseter", "Orbicularis"],
+    answer: 1,
+    explain: "Stapedius muscle — smallest muscle in the body, attached to the stapes. Contracts reflexively to loud sounds, stiffening the ossicular chain."
+  },
+  {
+    q: "The stapedius muscle is innervated by cranial nerve:",
+    type: "mc",
+    options: ["V (Trigeminal)", "VII (Facial)", "VIII (Vestibulocochlear)", "X (Vagus)"],
+    answer: 1,
+    explain: "CN VII (Facial nerve) innervates the stapedius. This is why acoustic reflexes can test facial nerve integrity."
+  },
+  {
+    q: "When one ear receives a sufficiently loud sound, the stapedius contracts in:",
+    type: "mc",
+    options: [
+      "Only the stimulated ear (ipsilateral only)",
+      "Only the opposite ear (contralateral only)",
+      "Both ears (bilateral reflex)",
+      "Neither ear until repeated stimulation"
+    ],
+    answer: 2,
+    explain: "Bilateral reflex — both ipsilateral and contralateral stapedius muscles contract when either ear gets a loud enough sound."
+  },
+  {
+    q: "Normal acoustic reflex thresholds occur in the range of:",
+    type: "mc",
+    options: ["40-60 dB HL", "50-70 dB SL", "70-100 dB HL", "100-120 dB HL"],
+    answer: 2,
+    explain: "Normal ART = 70-100 dB HL. Average is 85 dB HL. This is the range for normal-hearing listeners."
+  },
+  {
+    q: "The average acoustic reflex threshold is:",
+    type: "mc",
+    options: ["70 dB HL", "85 dB HL", "100 dB HL", "110 dB HL"],
+    answer: 1,
+    explain: "Average ART = 85 dB HL (middle of the 70-100 range)."
+  },
+  {
+    q: "Elevated acoustic reflex sensation levels (above 100 dB SL) suggest:",
+    type: "mc",
+    options: [
+      "Cochlear hearing loss",
+      "Normal hearing",
+      "Mild conductive loss or retrocochlear pathology",
+      "Eustachian tube dysfunction"
+    ],
+    answer: 2,
+    explain: "Elevated (>100 dB SL) = mild conductive losses OR retrocochlear pathology. The reflex requires more intensity than normal to trigger."
+  },
+  {
+    q: "Reduced acoustic reflex sensation levels (below 60 dB SL) suggest:",
+    type: "mc",
+    options: [
+      "Normal hearing",
+      "Retrocochlear pathology",
+      "Cochlear hearing loss",
+      "Middle ear pathology"
+    ],
+    answer: 2,
+    explain: "Reduced (<60 dB SL) = COCHLEAR loss. Professor said this is the most important one for the class and will definitely be on the test."
+  },
+  {
+    q: "To calculate acoustic reflex sensation level (ipsilateral), you subtract ___ from the reflex threshold.",
+    type: "mc",
+    options: [
+      "SRT",
+      "PTA",
+      "UCL",
+      "MCL"
+    ],
+    answer: 1,
+    explain: "Acoustic reflex sensation level = ART (reflex threshold in dB HL) minus PTA. Your professor specifically said: 'Calculate sensation levels IPSI Right and Left (HL minus PTA).'"
+  },
+  {
+    q: "A patient has a PTA of 45 dB HL and an ipsilateral acoustic reflex threshold of 90 dB HL. The sensation level is:",
+    type: "calc",
+    options: ["35 dB SL", "45 dB SL", "55 dB SL", "90 dB SL"],
+    answer: 1,
+    explain: "90 − 45 = 45 dB SL. This is below 60 dB SL = REDUCED = suggests cochlear hearing loss."
+  },
+  {
+    q: "The only condition among normal, elevated, and reduced acoustic reflex sensation levels that suggests cochlear loss is:",
+    type: "mc",
+    options: [
+      "Normal sensation levels",
+      "Elevated sensation levels",
+      "Reduced sensation levels",
+      "Absent reflexes"
+    ],
+    answer: 2,
+    explain: "Professor quote: 'Know that the only one of these 3 that causes reduced HL is cochlear loss.' Reduced sensation level = cochlear. Elevated = conductive or retrocochlear."
+  },
+
+  // ========== SECTION: OAEs (Q63-67) ==========
+  {
+    section: "OTOACOUSTIC EMISSIONS (OAEs)",
+    q: "OAEs arise from movement of ___ in the cochlea.",
+    type: "mc",
+    options: [
+      "Inner hair cells",
+      "Outer hair cells",
+      "Tectorial membrane",
+      "Basilar membrane"
+    ],
+    answer: 1,
+    explain: "OAEs = outer hair cell (OHC) movement. A byproduct of OHC motility is a pressure wave that travels back through the middle ear and produces a measurable sound in the ear canal."
+  },
+  {
+    q: "OAEs provide information about the function of cranial nerve VIII and the central auditory nervous system.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "FALSE — OAEs are PRENEURAL. They only tell you about the cochlea (outer hair cells). They say nothing about CN VIII or central auditory pathways. ABR handles that."
+  },
+  {
+    q: "TEOAEs use ___ as stimuli and cover a frequency range of approximately ___.",
+    type: "mc",
+    options: [
+      "Two simultaneous tones; 1000-8000 Hz",
+      "Clicks; 1000-4000 Hz",
+      "Tone bursts; 500-2000 Hz",
+      "Spondee words; 250-4000 Hz"
+    ],
+    answer: 1,
+    explain: "TEOAEs use clicks (transient signal), broad spectrum covering 1000-4000 Hz. DPOAEs use two simultaneous tones and cover 1000-8000 Hz."
+  },
+  {
+    q: "TEOAEs are typically absent in individuals with hearing loss greater than:",
+    type: "mc",
+    options: ["20 dB HL", "30 dB HL", "40 dB HL", "60 dB HL"],
+    answer: 2,
+    explain: "TEOAEs absent above 40 dB HL. DPOAEs also typically absent above 40 dB HL but may show reduced amplitude up to 50-60 dB HL."
+  },
+  {
+    q: "DPOAEs differ from TEOAEs in that DPOAEs:",
+    type: "mc",
+    options: [
+      "Use clicks and cover 1000-4000 Hz",
+      "Present two tones simultaneously, producing a third distortion product, and cover 1000-8000 Hz",
+      "Are neural responses recorded from electrodes",
+      "Require sedation to measure"
+    ],
+    answer: 1,
+    explain: "DPOAEs = two tones in → third tone (distortion product) out. Broader range: 1000-8000 Hz vs TEOAE's 1000-4000 Hz. Still preneural, still about OHCs."
+  },
+
+  // ========== SECTION: ABR (Q68-70) ==========
+  {
+    section: "AUDITORY BRAINSTEM RESPONSE (ABR)",
+    q: "ABR is part of the basic audiometric test battery.",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "FALSE — Slide 59 explicitly states: 'ABR is NOT part of the basic audiometric test battery.' It's used for specific purposes: rule out retrocochlear lesion and estimate hearing thresholds."
+  },
+  {
+    q: "ABR responses are affected by the patient's state of consciousness (sleeping, sedated, comatose).",
+    type: "tf",
+    options: ["True", "False"],
+    answer: 1,
+    explain: "FALSE — ABR is immune to state of consciousness. It works on sleeping, sedated, and comatose patients. That's what makes it so useful for infants and difficult-to-test populations."
+  },
+  {
+    q: "The most robust ABR wave that can be observed near behavioral thresholds is:",
+    type: "mc",
+    options: ["Wave I", "Wave III", "Wave V", "Wave VII"],
+    answer: 2,
+    explain: "Wave V is the most robust and can be tracked down to near-threshold levels. It's the key wave for threshold estimation. ABR interpretation uses absolute latencies, interpeak latencies (I-III, III-V, I-V), interaural latency differences, and morphology."
+  }
+];
+
+// Build the HTML
+const container = document.getElementById('questionsContainer');
+let currentSection = '';
+let answered = 0, correct = 0, wrong = 0;
+const userAnswers = new Array(questions.length).fill(-1);
+
+questions.forEach((q, i) => {
+  if (q.section && q.section !== currentSection) {
+    currentSection = q.section;
+    const sh = document.createElement('div');
+    sh.className = 'section-header';
+    sh.textContent = currentSection;
+    container.appendChild(sh);
+  }
+
+  const card = document.createElement('div');
+  card.className = 'question-card';
+  card.id = `q${i}`;
+
+  const typeBadge = q.type === 'tf' ? '<span class="q-type-badge badge-tf">T/F</span>' :
+                    q.type === 'calc' ? '<span class="q-type-badge badge-calc">CALC</span>' :
+                    '<span class="q-type-badge badge-mc">MC</span>';
+
+  let optionsHTML = q.options.map((opt, j) => {
+    const letter = q.type === 'tf' ? (j === 0 ? 'T' : 'F') : String.fromCharCode(65 + j);
+    return `<button class="option-btn" data-q="${i}" data-opt="${j}" onclick="selectAnswer(${i}, ${j})">
+      <span class="letter">${letter}</span>
+      <span>${opt}</span>
+    </button>`;
+  }).join('');
+
+  card.innerHTML = `
+    <span class="q-number">Q${i + 1} ${typeBadge}</span>
+    <div class="q-text">${q.q}</div>
+    <div class="options">${optionsHTML}</div>
+    <div class="explanation" id="exp${i}">${q.explain}</div>
+  `;
+
+  container.appendChild(card);
+});
+
+function selectAnswer(qi, oi) {
+  const card = document.getElementById(`q${qi}`);
+  const btns = card.querySelectorAll('.option-btn');
+  const exp = document.getElementById(`exp${qi}`);
+
+  if (btns[0].classList.contains('locked')) return;
+
+  const wasUnanswered = userAnswers[qi] === -1;
+  userAnswers[qi] = oi;
+
+  // Lock all buttons
+  btns.forEach(b => {
+    b.classList.remove('selected', 'correct-answer', 'wrong-answer');
+    b.classList.add('locked');
+  });
+
+  const isCorrect = oi === questions[qi].answer;
+
+  if (isCorrect) {
+    btns[oi].classList.add('correct-answer');
+    card.classList.add('answered-correct');
+    exp.className = 'explanation show correct-exp';
+    if (wasUnanswered) correct++;
+  } else {
+    btns[oi].classList.add('wrong-answer');
+    btns[questions[qi].answer].classList.add('correct-answer');
+    card.classList.add('answered-wrong');
+    exp.className = 'explanation show wrong-exp';
+    if (wasUnanswered) wrong++;
+  }
+
+  if (wasUnanswered) answered++;
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('answeredCount').textContent = answered;
+  document.getElementById('correctCount').textContent = correct + ' ✓';
+  document.getElementById('wrongCount').textContent = wrong + ' ✗';
+  document.getElementById('unansweredCount').textContent = (70 - answered) + ' left';
+}
+
+function submitExam() {
+  // Reveal all unanswered
+  questions.forEach((q, i) => {
+    if (userAnswers[i] === -1) {
+      const card = document.getElementById(`q${i}`);
+      const btns = card.querySelectorAll('.option-btn');
+      const exp = document.getElementById(`exp${i}`);
+      btns.forEach(b => b.classList.add('locked'));
+      btns[q.answer].classList.add('correct-answer');
+      exp.className = 'explanation show wrong-exp';
+      exp.innerHTML = '⚠️ UNANSWERED — ' + q.explain;
+      card.classList.add('answered-wrong');
+      wrong++;
+      answered++;
+    }
+  });
+  updateScore();
+
+  const pct = Math.round((correct / 70) * 100);
+  const grade = pct >= 93 ? 'A' : pct >= 90 ? 'A-' : pct >= 87 ? 'B+' : pct >= 83 ? 'B' : pct >= 80 ? 'B-' : pct >= 77 ? 'C+' : pct >= 73 ? 'C' : 'Below C';
+  const panel = document.getElementById('resultsPanel');
+  panel.style.display = 'block';
+  document.getElementById('finalScore').textContent = `${correct}/70 — ${pct}%`;
+  document.getElementById('finalScore').style.color = pct >= 90 ? '#3fb950' : pct >= 80 ? '#58a6ff' : pct >= 70 ? '#d29922' : '#f85149';
+  document.getElementById('breakdown').innerHTML = `
+    Grade: <strong>${grade}</strong><br>
+    Correct: ${correct} | Wrong: ${wrong}<br><br>
+    ${pct >= 90 ? "You're ready. Go crush it Tuesday." : pct >= 80 ? "Close — review the ones you missed and run it again." : "You need another pass. Focus on the red cards."}
+  `;
+  panel.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetExam() {
+  answered = 0; correct = 0; wrong = 0;
+  userAnswers.fill(-1);
+  questions.forEach((q, i) => {
+    const card = document.getElementById(`q${i}`);
+    card.className = 'question-card';
+    const btns = card.querySelectorAll('.option-btn');
+    btns.forEach(b => {
+      b.className = 'option-btn';
+    });
+    document.getElementById(`exp${i}`).className = 'explanation';
+  });
+  document.getElementById('resultsPanel').style.display = 'none';
+  updateScore();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
