@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spectrogram ID Practice — COMD 4153</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f0f0f0; color: #222; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .header { background: #1a1a2e; padding: 18px 32px; text-align: center; }
+  .header h1 { font-size: 22px; color: #e94560; }
+  .header p { color: #8892b0; font-size: 12px; margin-top: 2px; }
+
+  .tabs { display: flex; justify-content: center; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+  .tab-btn { padding: 9px 20px; border: 2px solid #1a1a2e; background: #fff; color: #333; border-radius: 8px; cursor: pointer; font-size: 14px; }
+  .tab-btn.active { background: #1a1a2e; color: #e94560; }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 20px 40px; }
+  .hidden { display: none; }
+
+  .study-grid { display: grid; grid-template-columns: 1fr; gap: 28px; margin-top: 16px; max-width: 900px; margin-left: auto; margin-right: auto; }
+  .card { background: #fff; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .card-header { padding: 14px 18px; background: #f8f8fc; border-bottom: 1px solid #e0e0e0; }
+  .card-header h3 { font-size: 17px; color: #1a1a2e; }
+  .card-header .sub { font-size: 13px; color: #666; margin-top: 2px; }
+  .card-body { padding: 14px 18px; }
+  .spec-panel { background: #f0ece4; border: 1px solid #c0b8a8; border-radius: 4px; overflow: hidden; margin-bottom: 10px; position: relative; }
+  .spec-panel canvas { display: block; width: 100%; }
+
+  .description { color: #444; font-size: 13px; line-height: 1.55; margin-top: 8px; }
+  .key-parts { margin-top: 10px; }
+  .key-part { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+  .key-part:last-child { border-bottom: none; }
+  .kp-num { background: #1a1a2e; color: #e94560; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .kp-name { font-weight: 600; color: #1a1a2e; min-width: 130px; }
+  .kp-desc { color: #555; }
+
+  .quiz-area { max-width: 900px; margin: 20px auto 0; text-align: center; }
+  .quiz-card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 16px; }
+  .quiz-question { font-size: 17px; color: #1a1a2e; margin: 14px 0; line-height: 1.4; }
+  .quiz-question strong { color: #e94560; }
+  .quiz-options { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 14px; }
+  .quiz-opt { padding: 10px 22px; border: 2px solid #ddd; background: #fff; color: #333; border-radius: 8px; cursor: pointer; font-size: 14px; min-width: 180px; transition: all 0.15s; text-align: left; }
+  .quiz-opt:hover { border-color: #1a1a2e; background: #f8f8fc; }
+  .quiz-opt.correct { border-color: #2a9d8f; background: #e8f5f0; color: #1a6b5a; font-weight: 600; }
+  .quiz-opt.wrong { border-color: #e94560; background: #fde8ec; color: #a0243a; }
+  .quiz-opt.reveal { border-color: #2a9d8f; background: #e8f5f0; }
+  .quiz-opt:disabled { cursor: default; }
+  .score-bar { display: flex; justify-content: center; gap: 20px; margin-bottom: 14px; font-size: 14px; color: #555; }
+  .score-bar .g { color: #2a9d8f; font-weight: 600; }
+  .score-bar .r { color: #e94560; font-weight: 600; }
+  .feedback { font-size: 13px; padding: 12px 16px; border-radius: 8px; margin: 0 auto 14px; line-height: 1.5; text-align: left; max-width: 700px; }
+  .feedback.ok { background: #e8f5f0; border: 1px solid #2a9d8f; color: #1a6b5a; }
+  .feedback.no { background: #fde8ec; border: 1px solid #e94560; color: #a0243a; }
+  .next-btn { padding: 10px 28px; background: #1a1a2e; border: none; color: #e94560; border-radius: 8px; cursor: pointer; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Spectrogram Identification Practice</h1>
+  <p>COMD 4153 — Speech Acoustics | Subsection Identification</p>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="setTab('study-whole')" id="t-sw">Study: Whole Sounds</button>
+    <button class="tab-btn" onclick="setTab('study-parts')" id="t-sp">Study: Subsections</button>
+    <button class="tab-btn" onclick="setTab('quiz-type')" id="t-qt">Quiz: Identify Type</button>
+    <button class="tab-btn" onclick="setTab('quiz-part')" id="t-qp">Quiz: Identify Part</button>
+    <button class="tab-btn" onclick="setTab('quiz-phrase')" id="t-qph">Quiz: Phrase Segments</button>
+  </div>
+
+  <div id="panel-study-whole"></div>
+  <div id="panel-study-parts" class="hidden"></div>
+  <div id="panel-quiz-type" class="hidden"></div>
+  <div id="panel-quiz-part" class="hidden"></div>
+  <div id="panel-quiz-phrase" class="hidden"></div>
+</div>
+
+<script>
+const SR = 16000;
+
+function genSignal(recipe, dur) {
+  const N = Math.floor(SR * dur);
+  const sig = new Float32Array(N);
+  for (const seg of recipe.segments) {
+    const i0 = Math.floor(seg.tStart * SR), i1 = Math.min(Math.floor(seg.tEnd * SR), N);
+    for (let i = i0; i < i1; i++) {
+      const t = i / SR, st = (i - i0) / (i1 - i0);
+      sig[i] += synthSeg(t, seg, st);
+    }
+  }
+  let mx = 0;
+  for (let i = 0; i < N; i++) mx = Math.max(mx, Math.abs(sig[i]));
+  if (mx > 0) for (let i = 0; i < N; i++) sig[i] /= mx;
+  return sig;
+}
+
+function synthSeg(t, seg, st) {
+  switch (seg.type) {
+    case 'vowel': return sVowel(t, seg, st);
+    case 'fricative': return sFric(t, seg, st);
+    case 'closure': return 0;
+    case 'voicing_bar': return sVBar(t, seg, st);
+    case 'burst': return sBurst(t, seg, st);
+    case 'aspiration': return sAsp(t, seg, st);
+    case 'nasal': return sNasal(t, seg, st);
+    case 'lateral': return sLateral(t, seg, st);
+    case 'aff_fric': return sAffFric(t, seg, st);
+    default: return 0;
+  }
+}
+
+function env(st, a, b) { return Math.min(1, st * a) * Math.min(1, (1 - st) * b); }
+function gb(f, c, bw, a) { return a * Math.exp(-0.5 * ((f - c) / bw) ** 2); }
+
+function sVowel(t, seg, st) {
+  const f0 = seg.f0 || 120, fm = seg.formants || [500,1500,2500], am = seg.amps || [1,0.7,0.4];
+  let v = 0;
+  for (let h = 1; h <= 30; h++) {
+    const hf = f0 * h; if (hf > 7500) break;
+    let a = 0.5 / (h * h);
+    for (let fi = 0; fi < fm.length; fi++) { a *= (1 + gb(hf, fm[fi], 80 + fi * 40, am[fi]) * 5); }
+    v += a * Math.sin(2 * Math.PI * hf * t);
+  }
+  return v * env(st, 12, 12) * (seg.amp || 0.8);
+}
+
+function sFric(t, seg, st) {
+  const lo = seg.lo || 3500, hi = seg.hi || 8000, pk = seg.peak || 5500, am = seg.amp || 0.6;
+  let v = (Math.random() * 2 - 1) * am * 0.3;
+  for (let f = lo; f <= hi; f += 200) {
+    v += Math.exp(-0.5 * ((f - pk) / ((hi - lo) / 2)) ** 2) * Math.sin(2 * Math.PI * f * t + Math.random() * 6.28) * 0.05;
+  }
+  if (seg.voiced) for (let h = 1; h <= 3; h++) v += (0.15 / h) * Math.sin(2 * Math.PI * 120 * h * t);
+  return v * env(st, 8, 8);
+}
+
+function sVBar(t, seg, st) {
+  let v = 0;
+  for (let h = 1; h <= 2; h++) v += (0.08 / h) * Math.sin(2 * Math.PI * (seg.f0 || 120) * h * t);
+  return v;
+}
+
+function sBurst(t, seg, st) {
+  return (Math.random() * 2 - 1) * (seg.amp || 0.8) * Math.exp(-st * 8);
+}
+
+function sAsp(t, seg, st) {
+  let v = (Math.random() * 2 - 1) * 0.3 * Math.exp(-st * 3);
+  for (let f = 1500; f <= 5000; f += 300) v += Math.sin(2 * Math.PI * f * t + Math.random() * 6.28) * 0.02 * Math.exp(-st * 3);
+  return v;
+}
+
+function sNasal(t, seg, st) {
+  const f0 = seg.f0 || 120, ar = seg.antires || 1000;
+  let v = 0;
+  for (let h = 1; h <= 8; h++) {
+    const hf = f0 * h; let a = 0.2 / (h * h);
+    a *= 1 + 3 * Math.exp(-0.5 * ((hf - 270) / 80) ** 2);
+    a *= 1 - 0.8 * Math.exp(-0.5 * ((hf - ar) / 150) ** 2);
+    v += a * Math.sin(2 * Math.PI * hf * t);
+  }
+  return v * env(st, 8, 8);
+}
+
+function sLateral(t, seg, st) {
+  const f0 = seg.f0 || 120;
+  let v = 0;
+  for (let h = 1; h <= 20; h++) {
+    const hf = f0 * h; if (hf > 5000) break;
+    let a = 0.3 / (h * h);
+    a *= (1 + gb(hf, 350, 80, 0.5) * 4 + gb(hf, 1100, 120, 0.3) * 4 + gb(hf, 2800, 200, 0.15) * 4);
+    a *= 1 - 0.7 * Math.exp(-0.5 * ((hf - 1800) / 200) ** 2);
+    v += a * Math.sin(2 * Math.PI * hf * t);
+  }
+  return v * env(st, 8, 8) * 0.4;
+}
+
+function sAffFric(t, seg, st) {
+  const lo = seg.lo || 2500, hi = seg.hi || 7500, pk = seg.peak || 4500, am = seg.amp || 0.5;
+  let v = (Math.random() * 2 - 1) * am * 0.3 * Math.min(1, st * 4);
+  for (let f = lo; f <= hi; f += 200) {
+    v += Math.exp(-0.5 * ((f - pk) / 1500) ** 2) * Math.sin(2 * Math.PI * f * t + Math.random() * 6.28) * 0.04 * Math.min(1, st * 4);
+  }
+  return v;
+}
+
+function computeSpec(signal, fftSz, hop, maxBin) {
+  const nFrames = Math.floor((signal.length - fftSz) / hop) + 1;
+  const spec = [];
+  for (let fr = 0; fr < nFrames; fr++) {
+    const off = fr * hop;
+    const mags = new Float32Array(maxBin);
+    const real = new Float32Array(fftSz);
+    for (let i = 0; i < fftSz; i++) real[i] = (signal[off + i] || 0) * (0.54 - 0.46 * Math.cos(2 * Math.PI * i / (fftSz - 1)));
+    for (let k = 0; k < maxBin; k++) {
+      let re = 0, im = 0;
+      for (let n = 0; n < fftSz; n++) { const a = -2 * Math.PI * k * n / fftSz; re += real[n] * Math.cos(a); im += real[n] * Math.sin(a); }
+      mags[k] = Math.sqrt(re * re + im * im);
+    }
+    spec.push(mags);
+  }
+  return spec;
+}
+
+function drawPanel(container, recipe, W, wH, sH, dur, markers) {
+  container.innerHTML = '';
+  const sig = genSignal(recipe, dur);
+
+  const wC = document.createElement('canvas'); wC.width = W; wC.height = wH; wC.style.cssText = 'display:block;width:100%';
+  container.appendChild(wC);
+  const wCtx = wC.getContext('2d');
+  wCtx.fillStyle = '#f5f0e8'; wCtx.fillRect(0, 0, W, wH);
+  wCtx.strokeStyle = '#d8d0c0'; wCtx.lineWidth = 0.5; wCtx.beginPath(); wCtx.moveTo(0, wH/2); wCtx.lineTo(W, wH/2); wCtx.stroke();
+  wCtx.strokeStyle = '#3a3020'; wCtx.lineWidth = 1; wCtx.beginPath();
+  const spp = sig.length / W;
+  for (let x = 0; x < W; x++) {
+    const si = Math.floor(x * spp); let mn = 0, mx2 = 0;
+    for (let i = si; i < Math.min(Math.floor((x+1)*spp), sig.length); i++) { mn = Math.min(mn, sig[i]); mx2 = Math.max(mx2, sig[i]); }
+    wCtx.moveTo(x, wH/2 - mx2 * wH/2 * 0.9); wCtx.lineTo(x, wH/2 - mn * wH/2 * 0.9);
+  }
+  wCtx.stroke();
+
+  const dv = document.createElement('div'); dv.style.cssText = 'height:1px;background:#a09880'; container.appendChild(dv);
+
+  const sC = document.createElement('canvas'); sC.width = W; sC.height = sH; sC.style.cssText = 'display:block;width:100%';
+  container.appendChild(sC);
+  const fftSz = 256, hop = 64, maxHz = 8000, maxBin = Math.floor(maxHz / SR * fftSz);
+  const spec = computeSpec(sig, fftSz, hop, maxBin);
+  const sCtx = sC.getContext('2d');
+  const img = sCtx.createImageData(W, sH);
+  let gMax = 0;
+  for (const f of spec) for (let k = 0; k < maxBin; k++) gMax = Math.max(gMax, f[k]);
+  for (let x = 0; x < W; x++) {
+    const fi = Math.floor(x / W * spec.length);
+    const frame = spec[Math.min(fi, spec.length - 1)];
+    for (let y = 0; y < sH; y++) {
+      const bin = Math.floor((1 - y / sH) * maxBin);
+      const mag = frame ? (frame[Math.min(bin, maxBin - 1)] || 0) : 0;
+      const dB = Math.max(0, Math.min(1, (Math.log10(mag / gMax + 0.001) + 3) / 3));
+      const br = 1 - dB;
+      const idx = (y * W + x) * 4;
+      img.data[idx] = Math.floor(42 + br * 203);
+      img.data[idx+1] = Math.floor(32 + br * 208);
+      img.data[idx+2] = Math.floor(16 + br * 216);
+      img.data[idx+3] = 255;
+    }
+  }
+  sCtx.putImageData(img, 0, 0);
+  sCtx.fillStyle = '#887860'; sCtx.font = '10px monospace'; sCtx.textAlign = 'left';
+  [0,2000,4000,6000,8000].forEach(f => { const yy = sH - (f / maxHz) * sH; sCtx.fillText(f>=1000?(f/1000)+'k':'0', 3, yy - 2); });
+
+  if (markers && markers.length) {
+    drawMarkers(wCtx, W, wH, dur, markers);
+    drawMarkers(sCtx, W, sH, dur, markers);
+  }
+}
+
+function drawMarkers(ctx, W, H, dur, markers) {
+  for (const m of markers) {
+    const x1 = (m.tStart / dur) * W;
+    const x2 = (m.tEnd / dur) * W;
+    const mid = (x1 + x2) / 2;
+    ctx.strokeStyle = 'rgba(233,69,96,0.7)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x1, H - 4); ctx.lineTo(x1, H - 18); ctx.lineTo(x2, H - 18); ctx.lineTo(x2, H - 4); ctx.stroke();
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(233,69,96,0.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H - 18); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, 0); ctx.lineTo(x2, H - 18); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#1a1a2e'; ctx.beginPath(); ctx.arc(mid, H - 30, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e94560'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(m.num, mid, H - 30); ctx.textBaseline = 'alphabetic';
+  }
+}
+
+// === DATA ===
+
+const WHOLE_SOUNDS = [
+  { name: 'Vowel /ɑ/', cat: 'Vowel', dur: 0.4, segments: [{type:'vowel',tStart:0.02,tEnd:0.38,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:125}], desc: 'Periodic waveform with clear formant bands. High amplitude. Dense vertical striations = glottal pulses.' },
+  { name: 'Vowel /i/', cat: 'Vowel', dur: 0.4, segments: [{type:'vowel',tStart:0.02,tEnd:0.38,formants:[270,2300,3000],amps:[0.9,0.85,0.6],f0:130}], desc: 'Low F1, very high F2 — tongue high and front. Wide F1-F2 gap.' },
+  { name: 'Voiceless Fricative /s/', cat: 'Voiceless Fricative', dur: 0.35, segments: [{type:'fricative',tStart:0.02,tEnd:0.33,lo:4000,hi:8000,peak:6500,amp:0.8}], desc: 'Aperiodic noise in high frequencies. No voicing bar. Sibilant = loud.' },
+  { name: 'Voiceless Fricative /f/', cat: 'Voiceless Fricative', dur: 0.35, segments: [{type:'fricative',tStart:0.02,tEnd:0.33,lo:1500,hi:8000,peak:5000,amp:0.2}], desc: 'Weak diffuse noise. Non-sibilant = very quiet. Almost blank spectrogram.' },
+  { name: 'Voiced Fricative /z/', cat: 'Voiced Fricative', dur: 0.35, segments: [{type:'fricative',tStart:0.02,tEnd:0.33,lo:4000,hi:8000,peak:6500,amp:0.55,voiced:true}], desc: 'High-freq noise + voicing bar at bottom. Dual source.' },
+  { name: 'Voiceless Stop /t/+V', cat: 'Voiceless Stop', dur: 0.5, segments: [{type:'closure',tStart:0.02,tEnd:0.18},{type:'burst',tStart:0.18,tEnd:0.22,amp:0.85},{type:'aspiration',tStart:0.22,tEnd:0.32},{type:'vowel',tStart:0.32,tEnd:0.48,formants:[500,1500,2500],amps:[0.9,0.7,0.45],f0:120}], desc: 'Silence → burst → aspiration → vowel. Long VOT.' },
+  { name: 'Voiced Stop /b/+V', cat: 'Voiced Stop', dur: 0.45, segments: [{type:'closure',tStart:0.02,tEnd:0.16},{type:'voicing_bar',tStart:0.02,tEnd:0.16,f0:120},{type:'burst',tStart:0.16,tEnd:0.19,amp:0.5},{type:'vowel',tStart:0.19,tEnd:0.43,formants:[500,1500,2500],amps:[0.9,0.7,0.45],f0:120}], desc: 'Voicing bar during closure → weak burst → straight into vowel. Short VOT.' },
+  { name: 'Affricate /tʃ/+V', cat: 'Affricate', dur: 0.55, segments: [{type:'closure',tStart:0.02,tEnd:0.15},{type:'burst',tStart:0.15,tEnd:0.19,amp:0.7},{type:'aff_fric',tStart:0.19,tEnd:0.35,lo:2500,hi:7500,peak:4500,amp:0.6},{type:'vowel',tStart:0.35,tEnd:0.53,formants:[500,1600,2600],amps:[0.85,0.7,0.5],f0:120}], desc: 'Closure → burst → EXTENDED frication → vowel. Stop + fricative hybrid.' },
+  { name: 'Nasal /m/+V', cat: 'Nasal', dur: 0.45, segments: [{type:'nasal',tStart:0.02,tEnd:0.20,antires:1000,f0:120},{type:'vowel',tStart:0.20,tEnd:0.43,formants:[500,1500,2500],amps:[0.9,0.75,0.5],f0:120}], desc: 'Low-amplitude murmur at ~250-300Hz. Much dimmer than vowel. Antiresonance dips out mid-frequencies.' },
+  { name: 'Lateral /l/+V', cat: 'Lateral', dur: 0.45, segments: [{type:'lateral',tStart:0.02,tEnd:0.20,f0:120},{type:'vowel',tStart:0.20,tEnd:0.43,formants:[300,2200,2800],amps:[0.9,0.8,0.55],f0:120}], desc: 'Vowel-like formants but much dimmer. Antiresonance dip in mid frequencies.' },
+];
+
+const SUBSECTION_ITEMS = [
+  {
+    title: 'Voiceless Stop /p/ + Vowel — "Pa"',
+    subtitle: 'Closure → Burst → Frication → Aspiration → Vowel onset',
+    dur: 0.6,
+    segments: [{type:'closure',tStart:0.03,tEnd:0.18},{type:'burst',tStart:0.18,tEnd:0.22,amp:0.9},{type:'aspiration',tStart:0.22,tEnd:0.35},{type:'vowel',tStart:0.35,tEnd:0.57,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    markers: [
+      {num:1, tStart:0.03, tEnd:0.18, name:'Closure Interval', desc:'Complete silence — lips sealed, no airflow, no acoustic energy. Flat line on waveform.'},
+      {num:2, tStart:0.18, tEnd:0.22, name:'Burst', desc:'Sudden release of pressure. Sharp spike on waveform. Brief broadband energy on spectrogram.'},
+      {num:3, tStart:0.22, tEnd:0.35, name:'Aspiration / VOT', desc:'Aperiodic noise generated at the GLOTTIS (not the constriction). Breathy fuzzy energy. Only in voiceless stops. VOT = burst through aspiration.'},
+      {num:4, tStart:0.35, tEnd:0.57, name:'Vowel Onset', desc:'Periodic vibration begins — formant bands appear. First glottal pulse marks the end of VOT.'},
+    ]
+  },
+  {
+    title: 'Voiced Stop /b/ + Vowel — "Ba"',
+    subtitle: 'Voicing bar → Burst → Immediate vowel (no aspiration)',
+    dur: 0.55,
+    segments: [{type:'closure',tStart:0.03,tEnd:0.22},{type:'voicing_bar',tStart:0.03,tEnd:0.22,f0:120},{type:'burst',tStart:0.22,tEnd:0.25,amp:0.45},{type:'vowel',tStart:0.25,tEnd:0.52,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    markers: [
+      {num:1, tStart:0.03, tEnd:0.22, name:'Closure + Voicing Bar', desc:'Oral cavity sealed BUT vocal folds still vibrating. Faint low-freq periodic energy at the very bottom of the spectrogram. NOT silent.'},
+      {num:2, tStart:0.22, tEnd:0.25, name:'Burst (weaker)', desc:'Release burst. Weaker than voiceless because less oral pressure builds up when VFs are vibrating.'},
+      {num:3, tStart:0.25, tEnd:0.52, name:'Vowel (immediate onset)', desc:'No aspiration gap — voicing was never interrupted. Burst goes right into periodic vowel. Short VOT.'},
+    ]
+  },
+  {
+    title: 'Voiceless Affricate /tʃ/ + Vowel — "Cha"',
+    subtitle: 'Closure → Burst → Extended frication → Vowel',
+    dur: 0.65,
+    segments: [{type:'closure',tStart:0.03,tEnd:0.16},{type:'burst',tStart:0.16,tEnd:0.20,amp:0.75},{type:'aff_fric',tStart:0.20,tEnd:0.38,lo:2500,hi:7500,peak:4500,amp:0.6},{type:'vowel',tStart:0.38,tEnd:0.62,formants:[700,1200,2600],amps:[0.9,0.7,0.45],f0:120}],
+    markers: [
+      {num:1, tStart:0.03, tEnd:0.16, name:'Closure', desc:'Same as a stop — complete oral closure, silence.'},
+      {num:2, tStart:0.16, tEnd:0.20, name:'Burst', desc:'Release — same as a stop burst. So far looks identical to a stop.'},
+      {num:3, tStart:0.20, tEnd:0.38, name:'Extended Frication', desc:'THIS is what makes it an affricate. Sustained aperiodic noise much longer than a stop burst. The fricative component.'},
+      {num:4, tStart:0.38, tEnd:0.62, name:'Vowel', desc:'Periodic voicing begins after the frication dies down.'},
+    ]
+  },
+  {
+    title: 'Voiceless Fricative /s/ + Vowel — "Sa"',
+    subtitle: 'Sustained aperiodic noise → Vowel (NO closure, NO burst)',
+    dur: 0.55,
+    segments: [{type:'fricative',tStart:0.03,tEnd:0.28,lo:4000,hi:8000,peak:6500,amp:0.8},{type:'vowel',tStart:0.28,tEnd:0.52,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    markers: [
+      {num:1, tStart:0.03, tEnd:0.28, name:'Fricative Noise', desc:'Sustained aperiodic turbulence. Random waveform. High-frequency energy. NO silence before it — key difference from stops/affricates.'},
+      {num:2, tStart:0.28, tEnd:0.52, name:'Vowel', desc:'Transition to periodic voicing. Formant bands appear.'},
+    ]
+  },
+  {
+    title: 'Voiced Fricative /z/ + Vowel — "Za"',
+    subtitle: 'Aperiodic noise + voicing bar simultaneously → Vowel',
+    dur: 0.55,
+    segments: [{type:'fricative',tStart:0.03,tEnd:0.28,lo:4000,hi:8000,peak:6500,amp:0.55,voiced:true},{type:'vowel',tStart:0.28,tEnd:0.52,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    markers: [
+      {num:1, tStart:0.03, tEnd:0.28, name:'Voiced Fricative', desc:'TWO things at once: aperiodic noise in upper frequencies AND a voicing bar at the bottom. Mixed source = VF vibration + turbulent airflow.'},
+      {num:2, tStart:0.28, tEnd:0.52, name:'Vowel', desc:'Smooth transition — voicing was already ongoing.'},
+    ]
+  },
+  {
+    title: 'Nasal /m/ + Vowel — "Ma"',
+    subtitle: 'Nasal murmur (low resonance + antiresonance) → Vowel',
+    dur: 0.55,
+    segments: [{type:'nasal',tStart:0.03,tEnd:0.25,antires:1000,f0:120},{type:'vowel',tStart:0.25,tEnd:0.52,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    markers: [
+      {num:1, tStart:0.03, tEnd:0.25, name:'Nasal Murmur', desc:'Low-frequency periodic energy at ~250-300Hz. MUCH dimmer than vowel. Antiresonance around ~1000Hz wipes out mid-frequency energy.'},
+      {num:2, tStart:0.25, tEnd:0.52, name:'Vowel', desc:'Sudden jump in amplitude and formant clarity. Nasal port closes, full oral resonance kicks in.'},
+    ]
+  },
+  {
+    title: 'Nasal /n/ + Vowel — "Na"',
+    subtitle: 'Same murmur, different antiresonance frequency',
+    dur: 0.55,
+    segments: [{type:'nasal',tStart:0.03,tEnd:0.25,antires:1500,f0:125},{type:'vowel',tStart:0.25,tEnd:0.52,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:125}],
+    markers: [
+      {num:1, tStart:0.03, tEnd:0.25, name:'Nasal Murmur (/n/)', desc:'Same ~250-300Hz resonance as /m/. But antiresonance at ~1500Hz instead of ~1000Hz. Different place → different back cavity → different antiresonance.'},
+      {num:2, tStart:0.25, tEnd:0.52, name:'Vowel', desc:'Same amplitude jump. Nasal port closes, oral formants dominate.'},
+    ]
+  },
+  {
+    title: 'Lateral /l/ + Vowel — "La"',
+    subtitle: 'Dim formants + antiresonance → Full vowel',
+    dur: 0.55,
+    segments: [{type:'lateral',tStart:0.03,tEnd:0.24,f0:120},{type:'vowel',tStart:0.24,tEnd:0.52,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    markers: [
+      {num:1, tStart:0.03, tEnd:0.24, name:'Lateral /l/', desc:'Formant bands visible but LIGHTER/DIMMER. Tongue constriction creates antiresonance dip ~1800Hz. Periodic but reduced amplitude.'},
+      {num:2, tStart:0.24, tEnd:0.52, name:'Vowel', desc:'Amplitude increases, formants darken. "Faded vowel → bright vowel" = the lateral giveaway.'},
+    ]
+  },
+  {
+    title: 'Stop vs. Affricate: /t/ vs /tʃ/ — The Critical Contrast',
+    subtitle: 'Both start with closure + burst. The difference is what comes AFTER.',
+    dur: 0.55,
+    segments: [
+      {type:'closure',tStart:0.02,tEnd:0.10},{type:'burst',tStart:0.10,tEnd:0.13,amp:0.85},{type:'aspiration',tStart:0.13,tEnd:0.20},
+      {type:'vowel',tStart:0.20,tEnd:0.28,formants:[700,1200,2600],amps:[0.8,0.6,0.4],f0:120,amp:0.6},
+      {type:'closure',tStart:0.30,tEnd:0.37},{type:'burst',tStart:0.37,tEnd:0.40,amp:0.7},
+      {type:'aff_fric',tStart:0.40,tEnd:0.49,lo:2500,hi:7500,peak:4500,amp:0.6},
+      {type:'vowel',tStart:0.49,tEnd:0.55,formants:[700,1200,2600],amps:[0.8,0.6,0.4],f0:120,amp:0.6},
+    ],
+    markers: [
+      {num:1, tStart:0.10, tEnd:0.13, name:'/t/ Burst (brief)', desc:'Stop burst — short transient spike then DONE. Brief aspiration follows.'},
+      {num:2, tStart:0.13, tEnd:0.20, name:'/t/ Aspiration', desc:'Breathy glottal noise. NOT frication — at the glottis, not the constriction.'},
+      {num:3, tStart:0.37, tEnd:0.40, name:'/tʃ/ Burst', desc:'Looks the same as the stop burst so far...'},
+      {num:4, tStart:0.40, tEnd:0.49, name:'/tʃ/ Extended Frication', desc:'THE DIFFERENCE. Sustained aperiodic noise at the constriction. Much longer than a stop burst. The fricative half of the affricate.'},
+    ]
+  },
+];
+
+const PHRASES = [
+  { title: '"Pa" — /p/ + /ɑ/', dur: 0.55, segments: [{type:'closure',tStart:0.02,tEnd:0.16},{type:'burst',tStart:0.16,tEnd:0.20,amp:0.9},{type:'aspiration',tStart:0.20,tEnd:0.30},{type:'vowel',tStart:0.30,tEnd:0.53,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    regions: [{num:1,tStart:0.02,tEnd:0.16,label:'Closure interval'},{num:2,tStart:0.16,tEnd:0.20,label:'Burst'},{num:3,tStart:0.20,tEnd:0.30,label:'Aspiration interval (VOT)'},{num:4,tStart:0.30,tEnd:0.53,label:'Vowel /ɑ/'}] },
+  { title: '"Ba" — /b/ + /ɑ/', dur: 0.5, segments: [{type:'closure',tStart:0.02,tEnd:0.18},{type:'voicing_bar',tStart:0.02,tEnd:0.18,f0:120},{type:'burst',tStart:0.18,tEnd:0.21,amp:0.45},{type:'vowel',tStart:0.21,tEnd:0.48,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    regions: [{num:1,tStart:0.02,tEnd:0.18,label:'Closure + Voicing bar'},{num:2,tStart:0.18,tEnd:0.21,label:'Burst (weak)'},{num:3,tStart:0.21,tEnd:0.48,label:'Vowel /ɑ/ (immediate onset)'}] },
+  { title: '"Cha" — /tʃ/ + /ɑ/', dur: 0.6, segments: [{type:'closure',tStart:0.02,tEnd:0.14},{type:'burst',tStart:0.14,tEnd:0.18,amp:0.7},{type:'aff_fric',tStart:0.18,tEnd:0.34,lo:2500,hi:7500,peak:4500,amp:0.6},{type:'vowel',tStart:0.34,tEnd:0.58,formants:[700,1200,2600],amps:[0.9,0.7,0.45],f0:120}],
+    regions: [{num:1,tStart:0.02,tEnd:0.14,label:'Closure interval'},{num:2,tStart:0.14,tEnd:0.18,label:'Burst'},{num:3,tStart:0.18,tEnd:0.34,label:'Extended frication'},{num:4,tStart:0.34,tEnd:0.58,label:'Vowel /ɑ/'}] },
+  { title: '"Ma" — /m/ + /ɑ/', dur: 0.5, segments: [{type:'nasal',tStart:0.02,tEnd:0.22,antires:1000,f0:120},{type:'vowel',tStart:0.22,tEnd:0.48,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    regions: [{num:1,tStart:0.02,tEnd:0.22,label:'Nasal murmur'},{num:2,tStart:0.22,tEnd:0.48,label:'Vowel /ɑ/'}] },
+  { title: '"Sa" — /s/ + /ɑ/', dur: 0.5, segments: [{type:'fricative',tStart:0.02,tEnd:0.24,lo:4000,hi:8000,peak:6500,amp:0.8},{type:'vowel',tStart:0.24,tEnd:0.48,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    regions: [{num:1,tStart:0.02,tEnd:0.24,label:'Fricative /s/ noise'},{num:2,tStart:0.24,tEnd:0.48,label:'Vowel /ɑ/'}] },
+  { title: '"La" — /l/ + /ɑ/', dur: 0.5, segments: [{type:'lateral',tStart:0.02,tEnd:0.22,f0:120},{type:'vowel',tStart:0.22,tEnd:0.48,formants:[700,1200,2600],amps:[1,0.7,0.45],f0:120}],
+    regions: [{num:1,tStart:0.02,tEnd:0.22,label:'Lateral /l/ (dim formants)'},{num:2,tStart:0.22,tEnd:0.48,label:'Vowel /ɑ/'}] },
+];
+
+// === BUILD FUNCTIONS ===
+
+function buildStudyWhole() {
+  const el = document.getElementById('panel-study-whole');
+  el.innerHTML = '<div class="study-grid" id="sg-whole"></div>';
+  const grid = document.getElementById('sg-whole');
+  for (const s of WHOLE_SOUNDS) {
+    const id = 'sw-' + Math.random().toString(36).slice(2,8);
+    const card = document.createElement('div'); card.className = 'card';
+    card.innerHTML = '<div class="card-header"><h3>'+s.name+'</h3></div><div class="card-body"><div class="spec-panel" id="'+id+'"></div><div class="description">'+s.desc+'</div></div>';
+    grid.appendChild(card);
+    setTimeout(() => { const p = document.getElementById(id); if (p) drawPanel(p, s, 520, 90, 170, s.dur); }, 50);
+  }
+}
+
+function buildStudyParts() {
+  const el = document.getElementById('panel-study-parts');
+  el.innerHTML = '<div class="study-grid" id="sg-parts"></div>';
+  const grid = document.getElementById('sg-parts');
+  for (const item of SUBSECTION_ITEMS) {
+    const id = 'sp-' + Math.random().toString(36).slice(2,8);
+    const card = document.createElement('div'); card.className = 'card';
+    let partsHTML = '';
+    for (const m of item.markers) partsHTML += '<div class="key-part"><div class="kp-num">'+m.num+'</div><div class="kp-name">'+m.name+'</div><div class="kp-desc">'+m.desc+'</div></div>';
+    card.innerHTML = '<div class="card-header"><h3>'+item.title+'</h3><div class="sub">'+item.subtitle+'</div></div><div class="card-body"><div class="spec-panel" id="'+id+'"></div><div class="key-parts">'+partsHTML+'</div></div>';
+    grid.appendChild(card);
+    setTimeout(() => { const p = document.getElementById(id); if (p) drawPanel(p, item, 700, 100, 200, item.dur, item.markers); }, 60);
+  }
+}
+
+// === QUIZ: TYPE ===
+let qType = {qs:[],cur:0,ok:0,no:0,done:false};
+function buildQuizType() {
+  const el = document.getElementById('panel-quiz-type');
+  el.innerHTML = '<div class="quiz-area" id="qa-type"></div>';
+  qType = {qs:shuffle([...WHOLE_SOUNDS]).slice(0,10),cur:0,ok:0,no:0,done:false}; showQType();
+}
+function showQType() {
+  const el = document.getElementById('qa-type'), q = qType.qs[qType.cur];
+  const id = 'qt-'+Math.random().toString(36).slice(2,8);
+  const cats = [...new Set(WHOLE_SOUNDS.map(s=>s.cat))];
+  const opts = shuffle([q.cat,...shuffle(cats.filter(c=>c!==q.cat)).slice(0,3)]);
+  el.innerHTML = '<div class="score-bar"><span>Q '+(qType.cur+1)+'/'+qType.qs.length+'</span><span class="g">✓ '+qType.ok+'</span><span class="r">✗ '+qType.no+'</span></div><div class="quiz-card"><div class="spec-panel" id="'+id+'"></div></div><div class="quiz-question">What type of speech sound is this?</div><div class="quiz-options" id="qto-opts">'+opts.map(o=>'<button class="quiz-opt" onclick="ansQType(this,\''+esc(o)+'\',\''+esc(q.cat)+'\')">'+o+'</button>').join('')+'</div><div id="qto-fb" class="feedback hidden"></div><button class="next-btn hidden" id="qto-next" onclick="nextQType()">Next →</button>';
+  setTimeout(()=>{const p=document.getElementById(id);if(p)drawPanel(p,q,560,90,170,q.dur);},50);
+}
+function ansQType(btn,chosen,correct) {
+  if(qType.done)return; qType.done=true;
+  document.querySelectorAll('#qto-opts .quiz-opt').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('qto-fb');
+  if(chosen===correct){btn.className='quiz-opt correct';qType.ok++;fb.className='feedback ok';fb.textContent='Correct!';}
+  else{btn.className='quiz-opt wrong';qType.no++;fb.className='feedback no';fb.innerHTML='Wrong — it\'s <strong>'+correct+'</strong>.';
+    document.querySelectorAll('#qto-opts .quiz-opt').forEach(b=>{if(b.textContent===correct)b.className='quiz-opt reveal';});}
+  document.getElementById('qto-next').classList.remove('hidden');
+}
+function nextQType(){qType.cur++;qType.done=false;if(qType.cur>=qType.qs.length){document.getElementById('qa-type').innerHTML='<div class="quiz-card" style="text-align:center;padding:30px;font-size:20px;color:#1a6b5a;">Score: '+qType.ok+'/'+qType.qs.length+' ('+Math.round(qType.ok/qType.qs.length*100)+'%)<br><button class="next-btn" style="margin-top:16px" onclick="buildQuizType()">Restart</button></div>';return;}showQType();}
+
+// === QUIZ: PART ===
+let qPart = {qs:[],cur:0,ok:0,no:0,done:false};
+function buildQuizPart() {
+  const el = document.getElementById('panel-quiz-part');
+  el.innerHTML = '<div class="quiz-area" id="qa-part"></div>';
+  const pool = [];
+  for (const item of SUBSECTION_ITEMS) for (const m of item.markers) pool.push({item,marker:m,wrongNames:item.markers.filter(x=>x.num!==m.num).map(x=>x.name)});
+  qPart = {qs:shuffle(pool).slice(0,15),cur:0,ok:0,no:0,done:false}; showQPart();
+}
+function showQPart() {
+  const el = document.getElementById('qa-part'), q = qPart.qs[qPart.cur];
+  const id = 'qp-'+Math.random().toString(36).slice(2,8);
+  const allNames = [...new Set(SUBSECTION_ITEMS.flatMap(i=>i.markers.map(m=>m.name)))];
+  let wrongs = q.wrongNames.length>=3?shuffle(q.wrongNames).slice(0,3):shuffle(allNames.filter(n=>n!==q.marker.name)).slice(0,3);
+  const opts = shuffle([q.marker.name,...wrongs.slice(0,3)]);
+  el.innerHTML = '<div class="score-bar"><span>Q '+(qPart.cur+1)+'/'+qPart.qs.length+'</span><span class="g">✓ '+qPart.ok+'</span><span class="r">✗ '+qPart.no+'</span></div><div class="quiz-card"><div style="font-size:13px;color:#888;margin-bottom:8px;">'+q.item.title+'</div><div class="spec-panel" id="'+id+'"></div></div><div class="quiz-question">What is the interval marked as <strong>#'+q.marker.num+'</strong>?</div><div class="quiz-options" id="qpo-opts">'+opts.map(o=>'<button class="quiz-opt" onclick="ansQPart(this,\''+esc(o)+'\',\''+esc(q.marker.name)+'\',\''+esc(q.marker.desc)+'\')">'+o+'</button>').join('')+'</div><div id="qpo-fb" class="feedback hidden"></div><button class="next-btn hidden" id="qpo-next" onclick="nextQPart()">Next →</button>';
+  setTimeout(()=>{const p=document.getElementById(id);if(p)drawPanel(p,q.item,660,100,200,q.item.dur,q.item.markers);},50);
+}
+function ansQPart(btn,chosen,correct,explanation) {
+  if(qPart.done)return; qPart.done=true;
+  document.querySelectorAll('#qpo-opts .quiz-opt').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('qpo-fb');
+  if(chosen===correct){btn.className='quiz-opt correct';qPart.ok++;fb.className='feedback ok';fb.textContent='Correct! '+explanation;}
+  else{btn.className='quiz-opt wrong';qPart.no++;fb.className='feedback no';fb.innerHTML='Wrong — it\'s <strong>'+correct+'</strong>. '+explanation;
+    document.querySelectorAll('#qpo-opts .quiz-opt').forEach(b=>{if(b.textContent===correct)b.className='quiz-opt reveal';});}
+  document.getElementById('qpo-next').classList.remove('hidden');
+}
+function nextQPart(){qPart.cur++;qPart.done=false;if(qPart.cur>=qPart.qs.length){document.getElementById('qa-part').innerHTML='<div class="quiz-card" style="text-align:center;padding:30px;font-size:20px;color:#1a6b5a;">Score: '+qPart.ok+'/'+qPart.qs.length+' ('+Math.round(qPart.ok/qPart.qs.length*100)+'%)<br><button class="next-btn" style="margin-top:16px" onclick="buildQuizPart()">Restart</button></div>';return;}showQPart();}
+
+// === QUIZ: PHRASE ===
+let qPhrase = {qs:[],cur:0,ok:0,no:0,done:false};
+function buildQuizPhrase() {
+  const el = document.getElementById('panel-quiz-phrase');
+  el.innerHTML = '<div class="quiz-area" id="qa-phrase"></div>';
+  const pool = [];
+  for (const ph of PHRASES) for (const r of ph.regions) pool.push({phrase:ph,region:r});
+  qPhrase = {qs:shuffle(pool).slice(0,15),cur:0,ok:0,no:0,done:false}; showQPhrase();
+}
+function showQPhrase() {
+  const el = document.getElementById('qa-phrase'), q = qPhrase.qs[qPhrase.cur];
+  const id = 'qph-'+Math.random().toString(36).slice(2,8);
+  const allLabels = [...new Set(PHRASES.flatMap(p=>p.regions.map(r=>r.label)))];
+  const opts = shuffle([q.region.label,...shuffle(allLabels.filter(l=>l!==q.region.label)).slice(0,3)]);
+  const mk = q.phrase.regions.map(r=>({num:r.num,tStart:r.tStart,tEnd:r.tEnd}));
+  el.innerHTML = '<div class="score-bar"><span>Q '+(qPhrase.cur+1)+'/'+qPhrase.qs.length+'</span><span class="g">✓ '+qPhrase.ok+'</span><span class="r">✗ '+qPhrase.no+'</span></div><div class="quiz-card"><div style="font-size:13px;color:#888;margin-bottom:8px;">'+q.phrase.title+'</div><div class="spec-panel" id="'+id+'"></div></div><div class="quiz-question">Region <strong>#'+q.region.num+'</strong> is:</div><div class="quiz-options" id="qpho-opts">'+opts.map(o=>'<button class="quiz-opt" onclick="ansQPhrase(this,\''+esc(o)+'\',\''+esc(q.region.label)+'\')">'+o+'</button>').join('')+'</div><div id="qpho-fb" class="feedback hidden"></div><button class="next-btn hidden" id="qpho-next" onclick="nextQPhrase()">Next →</button>';
+  setTimeout(()=>{const p=document.getElementById(id);if(p)drawPanel(p,q.phrase,660,100,200,q.phrase.dur,mk);},50);
+}
+function ansQPhrase(btn,chosen,correct) {
+  if(qPhrase.done)return; qPhrase.done=true;
+  document.querySelectorAll('#qpho-opts .quiz-opt').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('qpho-fb');
+  if(chosen===correct){btn.className='quiz-opt correct';qPhrase.ok++;fb.className='feedback ok';fb.textContent='Correct!';}
+  else{btn.className='quiz-opt wrong';qPhrase.no++;fb.className='feedback no';fb.innerHTML='Wrong — it\'s <strong>'+correct+'</strong>.';
+    document.querySelectorAll('#qpho-opts .quiz-opt').forEach(b=>{if(b.textContent===correct)b.className='quiz-opt reveal';});}
+  document.getElementById('qpho-next').classList.remove('hidden');
+}
+function nextQPhrase(){qPhrase.cur++;qPhrase.done=false;if(qPhrase.cur>=qPhrase.qs.length){document.getElementById('qa-phrase').innerHTML='<div class="quiz-card" style="text-align:center;padding:30px;font-size:20px;color:#1a6b5a;">Score: '+qPhrase.ok+'/'+qPhrase.qs.length+' ('+Math.round(qPhrase.ok/qPhrase.qs.length*100)+'%)<br><button class="next-btn" style="margin-top:16px" onclick="buildQuizPhrase()">Restart</button></div>';return;}showQPhrase();}
+
+// === UTILS ===
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function esc(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');}
+
+const tabIds = ['study-whole','study-parts','quiz-type','quiz-part','quiz-phrase'];
+const tabBtns = ['t-sw','t-sp','t-qt','t-qp','t-qph'];
+let built = {};
+
+function setTab(id) {
+  tabIds.forEach((tid,i) => {
+    document.getElementById('panel-'+tid).className = tid===id ? '' : 'hidden';
+    document.getElementById(tabBtns[i]).className = tid===id ? 'tab-btn active' : 'tab-btn';
+  });
+  if (!built[id]) {
+    built[id] = true;
+    if (id==='study-whole') buildStudyWhole();
+    else if (id==='study-parts') buildStudyParts();
+    else if (id==='quiz-type') buildQuizType();
+    else if (id==='quiz-part') buildQuizPart();
+    else if (id==='quiz-phrase') buildQuizPhrase();
+  } else if (id.startsWith('quiz')) {
+    if (id==='quiz-type') buildQuizType();
+    else if (id==='quiz-part') buildQuizPart();
+    else if (id==='quiz-phrase') buildQuizPhrase();
+  }
+}
+
+buildStudyWhole(); built['study-whole'] = true;
+</script>
+</body>
+</html>
